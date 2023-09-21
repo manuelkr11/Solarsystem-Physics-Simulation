@@ -1,0 +1,7 @@
+# Ignore object files and executables
+*.o
+*.exe
+
+# Ignore SDL
+/src/
+SDL2.dll
