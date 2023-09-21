@@ -1,5 +1,7 @@
 #include "solarsystem.h"
 
+double GRAVITATIONAL_CONSTANT = 100.0;
+
 std::string Planet::getName() const { 
 	return name; 
 }
@@ -32,30 +34,37 @@ double Planet::getVelY() const {
 	return velocity_y; 
 }
 
-double Planet::getDistanceX(const Planet& other) {
-	return other.getPosX() - pos_x;
+Color Planet::getColor() const {
+	return color;
 }
 
-double Planet::getDistanceY(const Planet& other) {
-	return other.getPosY() - pos_y;
+double Planet::getDistance(const Planet& other) const {
+    double dx = other.getPosX() - pos_x;
+    double dy = other.getPosY() - pos_y;
+    return sqrt(dx * dx + dy * dy);
 }
 
-double Planet::calculateGravityForceX(const Planet& other) {
-	double force = 0.;
+void Planet::initializeVelocity(const Planet& other) {
+	velocity_x = 0.;
+	velocity_y = sqrt(GRAVITATIONAL_CONSTANT * other.getMass() / this->getDistance(other));
+}
+
+void Planet::resetGravityForces(){
+	force_x = 0.;
+	force_y = 0;
+}
+
+void Planet::addGravityForces(const Planet& other) {
 	//force = GRAVITATIONAL_CONSTANT * mass * other.getMass() / sqrt(getDistanceX(other) * getDistanceX(other) + getDistanceY(other) * getDistanceY(other)); //TODO sqrt
-	return force; //TODO direction!
+	//TODO direction!
 }
 
-double Planet::calculateGravityForceY(const Planet& other) {
-	double force = 0.;
-	//force = GRAVITATIONAL_CONSTANT * mass * other.getMass() / sqrt(getDistanceX(other) * getDistanceX(other) + getDistanceY(other) * getDistanceY(other)); //TODO sqrt
-	return force; //TODO direction!
+void Planet::update(const double inc_step) {
+	//TODO velocity anpassen und Umdrehungen zaehlen
+	pos_x = pos_x + inc_step * velocity_x;
+	pos_y = pos_y + inc_step * velocity_y;
 }
 
-void Planet::update(double force_x, double force_y) {
-	// F(t) = m * dv(t)/dt  ->  dv(t) = (F(t)*dt) / m
-
-}
 
 std::vector<Planet> SolarSystem::getPlanets() const { 
 	return planets; 
@@ -63,4 +72,10 @@ std::vector<Planet> SolarSystem::getPlanets() const {
 
 void SolarSystem::addPlanet(const Planet& planet) {
 	planets.push_back(planet);
+}
+
+void SolarSystem::simulate(const double inc_step) {
+	for (Planet& planet : planets) {
+		planet.update(inc_step);
+	}
 }
