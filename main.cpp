@@ -4,7 +4,7 @@
 
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 800;
-const int SOLARSYSTEM_WIDTH = 10000; //TODO
+const int SOLARSYSTEM_WIDTH = 10000;
 
 void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius) {
     for (int w = 0; w < radius * 2; w++) {
@@ -18,7 +18,24 @@ void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius) {
     }
 }
 
+void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
+    for (int angle = 0; angle < 360; angle++) {
+        // Convert degrees to radians
+        double radian = angle * 3.14159265 / 180.0;
+        
+        // Calculate the coordinates of a point on the circle's circumference
+        int dx = static_cast<int>(radius * cos(radian));
+        int dy = static_cast<int>(radius * sin(radian));
+        
+        // Draw the point
+        SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+    }
+}
+
+
+
 int main( int argc, char *argv[] ) {
+
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
 		return 1;
@@ -40,45 +57,45 @@ int main( int argc, char *argv[] ) {
 
 	SolarSystem solarSystem("Earth's Solar System");
 	Color color(255, 255, 255);
-	Planet sun("Sun", 333000, 696342, 0, color);
+	Planet sun("sun", 333000, 696342, 0, color);
 	solarSystem.addPlanet(sun);
 
-	color.set(255,0,0);
+	color.set(141, 153, 147);
 	Planet mercury("mercury", 0.055, 2440, 63.81, color);
 	mercury.initializeVelocity(sun);
 	solarSystem.addPlanet(mercury);
 
-	color.set(255,0,0);
+	color.set(232, 193, 130);
 	Planet venus("venus", 0.815, 6052, 107.59, color);
 	venus.initializeVelocity(sun);
 	solarSystem.addPlanet(venus);
 
-	color.set(255,0,0);
+	color.set(99, 175, 255);
 	Planet earth("earth", 1, 6371, 151.48, color);
 	earth.initializeVelocity(sun);
 	solarSystem.addPlanet(earth);
 
-	color.set(255,0,0);
+	color.set(222, 102, 69);
 	Planet mars("mars", 0.107, 3390, 248.84, color);
 	mars.initializeVelocity(sun);
 	solarSystem.addPlanet(mars);
 
-	color.set(255,0,0);
+	color.set(237, 210, 159);
 	Planet jupiter("jupiter", 317.8, 69911, 755.91, color);
 	jupiter.initializeVelocity(sun);
 	solarSystem.addPlanet(jupiter);
 
-	color.set(255,0,0);
+	color.set(235, 227, 127);
 	Planet saturn("saturn", 95.16, 58232, 1487.8, color);
 	saturn.initializeVelocity(sun);
 	solarSystem.addPlanet(saturn);
 
-	color.set(0,0,255);
+	color.set(199, 252, 249);
 	Planet uranus("uranus", 14.54, 25362, 2954.6, color);
 	uranus.initializeVelocity(sun);
 	solarSystem.addPlanet(uranus);
 
-	color.set(0,255,0);
+	color.set(100, 180, 245);
 	Planet neptune("neptune", 17.15, 24622, 4475.5, color);	
 	neptune.initializeVelocity(sun);
 	solarSystem.addPlanet(neptune);
@@ -88,17 +105,24 @@ int main( int argc, char *argv[] ) {
 
 	bool userPressedZoomInKey = false;
 	bool userPressedZoomOutKey = false;
+	bool userPressedSpeedUpKey = false;
+	bool userPressedSpeedDownKey = false;
 	double zoomFactor = 1;
+	double step_speed = 0.1;
 
 	while (!quit) {
 		while (SDL_PollEvent(&e)) {
         	if (e.type == SDL_QUIT) {
             	quit = true;
         	} else if (e.type == SDL_KEYDOWN) {
-            	if (e.key.keysym.sym == SDLK_n) {
+            	if (e.key.keysym.sym == SDLK_m) {
                 	userPressedZoomInKey = true;
-            	} else if (e.key.keysym.sym == SDLK_m) {
+            	} else if (e.key.keysym.sym == SDLK_n) {
                 	userPressedZoomOutKey = true;
+            	} else if (e.key.keysym.sym == SDLK_k) {
+                	userPressedSpeedUpKey = true;
+            	} else if (e.key.keysym.sym == SDLK_j) {
+                	userPressedSpeedDownKey = true;
             	} else if (e.key.keysym.sym == SDLK_ESCAPE) {
 					quit = true;
 				}
@@ -116,19 +140,33 @@ int main( int argc, char *argv[] ) {
 			zoomFactor -= 0.1;
 			userPressedZoomOutKey = false;
 		}
+		if (userPressedSpeedUpKey) {
+			step_speed *= 1.5;
+			userPressedSpeedUpKey = false;
+		}
+		if (userPressedSpeedDownKey) {
+			step_speed /= 1.5;
+			userPressedSpeedDownKey = false;
+		}
 		zoomFactor = std::max(0.1, zoomFactor);
+
 
 		for (const Planet& planet : solarSystem.getPlanets()) {
 			double x = ((planet.getPosX() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor) + SCREEN_WIDTH / 2 ; //TODO
 			double y = ((planet.getPosY() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor) + SCREEN_HEIGHT / 2; //TODO
 
 			int radius;
-			if(planet.getName() == "Sun"){
+			if(planet.getName() == "sun"){
 				radius = std::max(1, static_cast<int>(planet.getRadius() / 150000 * zoomFactor));
 			}
 			else{
-				radius = std::max(1, static_cast<int>(planet.getRadius() / 5000 * zoomFactor));
+				radius = std::max(1, static_cast<int>(planet.getRadius() / 7000 * zoomFactor));
 			}
+
+			int orbit_radius = ((planet.getDistance() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
+
+			SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+			SDL_RenderDrawCircle(renderer, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, orbit_radius);
 			
 			int r = planet.getColor().r;
 			int g = planet.getColor().g;
@@ -141,7 +179,7 @@ int main( int argc, char *argv[] ) {
 
 		SDL_RenderPresent(renderer);
 
-		solarSystem.simulate(0.001);
+		solarSystem.simulate(step_speed);
 	}
 
 	SDL_DestroyRenderer(renderer);

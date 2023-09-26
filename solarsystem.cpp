@@ -1,6 +1,7 @@
 #include "solarsystem.h"
+#include <iostream>
 
-double GRAVITATIONAL_CONSTANT = 100.0;
+double GRAVITATIONAL_CONSTANT = .1;
 
 std::string Planet::getName() const { 
 	return name; 
@@ -41,12 +42,15 @@ Color Planet::getColor() const {
 double Planet::getDistance(const Planet& other) const {
     double dx = other.getPosX() - pos_x;
     double dy = other.getPosY() - pos_y;
-    return sqrt(dx * dx + dy * dy);
+	double result =  sqrt((dx * dx) + (dy * dy));
+    return result;
 }
 
 void Planet::initializeVelocity(const Planet& other) {
-	velocity_x = 0.;
-	velocity_y = sqrt(GRAVITATIONAL_CONSTANT * other.getMass() / this->getDistance(other));
+	double velocity = sqrt(( GRAVITATIONAL_CONSTANT * other.getMass()) / other.getDistance(*this));
+	double angle = atan2(pos_y, pos_x);
+	velocity_x = velocity * sin(angle);
+    velocity_y = velocity * cos(angle);
 }
 
 void Planet::resetGravityForces(){
@@ -55,12 +59,15 @@ void Planet::resetGravityForces(){
 }
 
 void Planet::addGravityForces(const Planet& other) {
-	//force = GRAVITATIONAL_CONSTANT * mass * other.getMass() / sqrt(getDistanceX(other) * getDistanceX(other) + getDistanceY(other) * getDistanceY(other)); //TODO sqrt
-	//TODO direction!
+	double distance = this->getDistance(other);
+	double force = GRAVITATIONAL_CONSTANT * mass * other.getMass() / (distance*distance); //undirected force
+	force_x += force * ((other.getPosX() - pos_x) / distance);
+	force_y += force * ((other.getPosY() - pos_y) / distance);
 }
 
 void Planet::update(const double inc_step) {
-	//TODO velocity anpassen und Umdrehungen zaehlen
+	velocity_x += (force_x * inc_step) / mass;
+	velocity_y += (force_y * inc_step) / mass;
 	pos_x = pos_x + inc_step * velocity_x;
 	pos_y = pos_y + inc_step * velocity_y;
 }
@@ -75,6 +82,16 @@ void SolarSystem::addPlanet(const Planet& planet) {
 }
 
 void SolarSystem::simulate(const double inc_step) {
+	for (Planet& planet : planets) {
+		if(planet.getName()!="sun") {
+			planet.resetGravityForces();
+			for(Planet& other_planet : planets) {
+				if(other_planet.getName() != planet.getName()) {
+					planet.addGravityForces(other_planet);
+				}
+			}
+		}
+	}
 	for (Planet& planet : planets) {
 		planet.update(inc_step);
 	}
