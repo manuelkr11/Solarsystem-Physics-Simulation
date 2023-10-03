@@ -40,6 +40,10 @@ Color Planet::getColor() const {
 	return color;
 }
 
+int Planet::getRotations() const{
+	return rotations;
+}
+
 double Planet::getDistance(const Planet& other) const {
     double dx = other.getPosX() - pos_x;
     double dy = other.getPosY() - pos_y;
@@ -67,10 +71,14 @@ void Planet::addGravityForces(const Planet& other) {
 }
 
 void Planet::update(const double inc_step) {
+	double old_pos_x = pos_x;
 	velocity_x += (force_x * inc_step) / mass;
 	velocity_y += (force_y * inc_step) / mass;
 	pos_x = pos_x + inc_step * velocity_x;
 	pos_y = pos_y + inc_step * velocity_y;
+	if(old_pos_x < 0 && pos_x >= 0){
+		rotations++;
+	}
 }
 
 
