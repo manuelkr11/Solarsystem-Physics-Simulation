@@ -1,13 +1,27 @@
-all: main
+# Define your source files
+SRCS = main.cpp solarsystem.cpp vec2d.cpp
 
-main: main.o solarsystem.o
-	g++ -o main main.o solarsystem.o -L src/lib -lmingw32 -mwindows -lSDL2main -lSDL2
+# Define object files
+OBJS = $(SRCS:.cpp=.o)
 
-main.o: main.cpp solarsystem.h
-	g++ -I src/include -c -o main.o main.cpp
+# Define compiler and flags
+CXX = g++
+CXXFLAGS = -Isrc/include
 
-solarsystem.o: solarsystem.cpp solarsystem.h
-	g++ -I src/include -c -o solarsystem.o solarsystem.cpp
+# Define linker and flags
+LDFLAGS = -Lsrc/lib -lmingw32 -mwindows -lSDL2main -lSDL2
+
+# Target for the final executable
+TARGET = main
+
+# Default target
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -f main main.o solarsystem.o
+	rm -f $(TARGET) $(OBJS)

@@ -2,6 +2,7 @@
 #include <fstream>
 #include <SDL2/SDL.h>
 #include "solarsystem.h"
+#include "vec2d.h"
 
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 800;
@@ -169,24 +170,21 @@ int main( int argc, char *argv[] ) {
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderClear(renderer);
 
-			double earth_x = 0;
-			double earth_y = 0;
+			Vector2D earth_pos;
 
 			if(earth_focus){
 				for (const Planet& planet : solarSystem.getPlanets()) {
 					if(planet.getName() == "earth"){
-						earth_x = ((planet.getPosX() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
-						earth_y = ((planet.getPosY() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
+						earth_pos = ((planet.getPos() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
 					}
 				}
 			}
 
 			for (const Planet& planet : solarSystem.getPlanets()) {
-				double x = ((planet.getPosX() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor) + SCREEN_WIDTH / 2;
-				double y = ((planet.getPosY() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor) + SCREEN_HEIGHT / 2;
 
-				x -= earth_x;
-				y -= earth_y;
+				Vector2D pos = (((planet.getPos() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH) * zoomFactor) + (Vector2D(SCREEN_WIDTH, SCREEN_HEIGHT) / 2);
+
+				pos -= earth_pos;
 
 				int radius;
 				if(planet.getName() == "sun"){
@@ -199,14 +197,10 @@ int main( int argc, char *argv[] ) {
 				int orbit_radius = ((planet.getDistance() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
 
 				SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
-				SDL_RenderDrawCircle(renderer, (SCREEN_WIDTH/2)-earth_x, (SCREEN_HEIGHT/2)-earth_y, orbit_radius);
-				
-				int r = planet.getColor().r;
-				int g = planet.getColor().g;
-				int b = planet.getColor().b;
+				SDL_RenderDrawCircle(renderer, (SCREEN_WIDTH/2)-earth_pos.x, (SCREEN_HEIGHT/2)-earth_pos.y, orbit_radius);
 
-				SDL_SetRenderDrawColor(renderer, r, g, b, 255);
-				SDL_RenderFillCircle(renderer, static_cast<int>(x), static_cast<int>(y), radius);
+				SDL_SetRenderDrawColor(renderer, planet.getColor().r, planet.getColor().g, planet.getColor().b, 255);
+				SDL_RenderFillCircle(renderer, static_cast<int>(pos.x), static_cast<int>(pos.y), radius);
 			}
 			SDL_RenderPresent(renderer);
 			refresh_count = 0;
@@ -217,13 +211,13 @@ int main( int argc, char *argv[] ) {
 	}
 
 
-	if(true){
+	if(true){ //TODO
 
 		float earth_rot = 0.;
 		// Get earth rotations
 		for(const Planet& planet : solarSystem.getPlanets()){
 			if(planet.getName() == "earth"){
-				earth_rot = std::atan2(planet.getPosY(), planet.getPosX());
+				earth_rot = std::atan2(planet.getPos().y, planet.getPos().x);
     			earth_rot = earth_rot / (2 * M_PI);
    				if (earth_rot < 0) {
         			earth_rot += 1;
@@ -232,18 +226,15 @@ int main( int argc, char *argv[] ) {
 			}
 		}
 
-
 		std::ofstream outputFile("results.txt");
 		if (!outputFile.is_open()) {
 			std::cerr << "Error opening the file." << std::endl;
 			return 1;
 		}
 
-
-
 		for(const Planet& planet : solarSystem.getPlanets()){
 			if(planet.getName() != "sun"){
-				double rotations = std::atan2(planet.getPosY(), planet.getPosX());
+				double rotations = std::atan2(planet.getPos().y, planet.getPos().x);
 				
 				rotations = rotations / (2 * M_PI);
 				if (rotations < 0) {

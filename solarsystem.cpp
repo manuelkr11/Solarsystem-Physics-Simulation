@@ -20,20 +20,12 @@ double Planet::getDistance() const {
 	return distance; 
 }
 
-double Planet::getPosX() const { 
-	return pos_x; 
+Vector2D Planet::getPos() const { 
+	return pos; 
 }
 
-double Planet::getPosY() const { 
-	return pos_y; 
-}
-
-double Planet::getVelX() const { 
-	return velocity_x; 
-}
-
-double Planet::getVelY() const { 
-	return velocity_y; 
+Vector2D Planet::getVel() const { 
+	return velocity;
 }
 
 Color Planet::getColor() const {
@@ -45,38 +37,31 @@ int Planet::getRotations() const{
 }
 
 double Planet::getDistance(const Planet& other) const {
-    double dx = other.getPosX() - pos_x;
-    double dy = other.getPosY() - pos_y;
-	double result =  sqrt((dx * dx) + (dy * dy));
-    return result;
+	Vector2D delta = other.getPos() - pos;
+    return delta.norm();
 }
 
 void Planet::initializeVelocity(const Planet& other) {
-	double velocity = sqrt(( GRAVITATIONAL_CONSTANT * other.getMass()) / other.getDistance(*this));
-	double angle = atan2(pos_y, pos_x);
-	velocity_x = velocity * sin(angle);
-    velocity_y = velocity * cos(angle);
+	double velocity_abs = sqrt(( GRAVITATIONAL_CONSTANT * other.getMass()) / other.getDistance(*this));
+	double angle = atan2(pos.y, pos.x);
+	velocity = velocity_abs * Vector2D(sin(angle), cos(angle));
 }
 
 void Planet::resetGravityForces(){
-	force_x = 0.;
-	force_y = 0;
+	force.rst();
 }
 
 void Planet::addGravityForces(const Planet& other) {
 	double distance = this->getDistance(other);
-	double force = GRAVITATIONAL_CONSTANT * mass * other.getMass() / (distance*distance); //undirected force
-	force_x += force * ((other.getPosX() - pos_x) / distance);
-	force_y += force * ((other.getPosY() - pos_y) / distance);
+	double force_abs = GRAVITATIONAL_CONSTANT * mass * other.getMass() / (distance*distance); //undirected force
+	force += ((force_abs * (other.getPos() - pos)) / distance);
 }
 
 void Planet::update(const double inc_step) {
-	double old_pos_x = pos_x;
-	velocity_x += (force_x * inc_step) / mass;
-	velocity_y += (force_y * inc_step) / mass;
-	pos_x = pos_x + inc_step * velocity_x;
-	pos_y = pos_y + inc_step * velocity_y;
-	if(old_pos_x < 0 && pos_x >= 0){
+	double old_pos_x = pos.x;
+	velocity += (force * inc_step) / mass;
+	pos += velocity * inc_step;
+	if(old_pos_x < 0 && pos.x >= 0){
 		rotations++;
 	}
 }
