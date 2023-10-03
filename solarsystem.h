@@ -4,6 +4,7 @@
 #include <vector>
 #include "color.h"
 #include <cmath>
+#include <omp.h>
 
 extern double GRAVITATIONAL_CONSTANT;
 

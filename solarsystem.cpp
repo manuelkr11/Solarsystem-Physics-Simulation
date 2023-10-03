@@ -1,7 +1,8 @@
 #include "solarsystem.h"
 #include <iostream>
 
-double GRAVITATIONAL_CONSTANT = .1;
+
+double GRAVITATIONAL_CONSTANT = 100;
 
 std::string Planet::getName() const { 
 	return name; 
@@ -82,6 +83,8 @@ void SolarSystem::addPlanet(const Planet& planet) {
 }
 
 void SolarSystem::simulate(const double inc_step) {
+	#pragma omp parallel num_threads(4)
+	#pragma omp for
 	for (Planet& planet : planets) {
 		if(planet.getName()!="sun") {
 			planet.resetGravityForces();

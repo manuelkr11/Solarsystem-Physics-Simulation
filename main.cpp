@@ -20,14 +20,9 @@ void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius) {
 
 void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
     for (int angle = 0; angle < 360; angle++) {
-        // Convert degrees to radians
         double radian = angle * 3.14159265 / 180.0;
-        
-        // Calculate the coordinates of a point on the circle's circumference
         int dx = static_cast<int>(radius * cos(radian));
         int dy = static_cast<int>(radius * sin(radian));
-        
-        // Draw the point
         SDL_RenderDrawPoint(renderer, x + dx, y + dy);
     }
 }
@@ -107,10 +102,16 @@ int main( int argc, char *argv[] ) {
 	bool userPressedZoomOutKey = false;
 	bool userPressedSpeedUpKey = false;
 	bool userPressedSpeedDownKey = false;
+	bool userPressedEarthKey = false;
 	double zoomFactor = 1;
-	double step_speed = 0.1;
+	double step_speed = 0.00005;
+	bool earth_focus = false;
+	int refresh_rate = 500;
+	int refresh_count = 0;
 
 	while (!quit) {
+		refresh_count++;
+
 		while (SDL_PollEvent(&e)) {
         	if (e.type == SDL_QUIT) {
             	quit = true;
@@ -123,14 +124,13 @@ int main( int argc, char *argv[] ) {
                 	userPressedSpeedUpKey = true;
             	} else if (e.key.keysym.sym == SDLK_j) {
                 	userPressedSpeedDownKey = true;
+            	} else if (e.key.keysym.sym == SDLK_h) {
+                	userPressedEarthKey = true;
             	} else if (e.key.keysym.sym == SDLK_ESCAPE) {
 					quit = true;
 				}
 			}
 		}
-
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderClear(renderer);
 
 		if (userPressedZoomInKey) {
     		zoomFactor += 0.1;
@@ -148,36 +148,64 @@ int main( int argc, char *argv[] ) {
 			step_speed /= 1.5;
 			userPressedSpeedDownKey = false;
 		}
-		zoomFactor = std::max(0.1, zoomFactor);
-
-
-		for (const Planet& planet : solarSystem.getPlanets()) {
-			double x = ((planet.getPosX() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor) + SCREEN_WIDTH / 2 ; //TODO
-			double y = ((planet.getPosY() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor) + SCREEN_HEIGHT / 2; //TODO
-
-			int radius;
-			if(planet.getName() == "sun"){
-				radius = std::max(1, static_cast<int>(planet.getRadius() / 150000 * zoomFactor));
+		if (userPressedEarthKey) {
+			if(earth_focus){
+				earth_focus = false;
 			}
 			else{
-				radius = std::max(1, static_cast<int>(planet.getRadius() / 7000 * zoomFactor));
+				earth_focus = true;
+			}
+			userPressedEarthKey = false;
+		}
+		zoomFactor = std::max(0.1, zoomFactor);
+
+		if(refresh_count >= refresh_rate){
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			SDL_RenderClear(renderer);
+
+			double earth_x = 0;
+			double earth_y = 0;
+
+			if(earth_focus){
+				for (const Planet& planet : solarSystem.getPlanets()) {
+					if(planet.getName() == "earth"){
+						earth_x = ((planet.getPosX() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
+						earth_y = ((planet.getPosY() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
+					}
+				}
 			}
 
-			int orbit_radius = ((planet.getDistance() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
+			for (const Planet& planet : solarSystem.getPlanets()) {
+				double x = ((planet.getPosX() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor) + SCREEN_WIDTH / 2;
+				double y = ((planet.getPosY() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor) + SCREEN_HEIGHT / 2;
 
-			SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
-			SDL_RenderDrawCircle(renderer, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, orbit_radius);
-			
-			int r = planet.getColor().r;
-			int g = planet.getColor().g;
-			int b = planet.getColor().b;
+				x -= earth_x;
+				y -= earth_y;
+
+				int radius;
+				if(planet.getName() == "sun"){
+					radius = std::max(1, static_cast<int>(planet.getRadius() / 150000 * zoomFactor));
+				}
+				else{
+					radius = std::max(1, static_cast<int>(planet.getRadius() / 7000 * zoomFactor));
+				}
+
+				int orbit_radius = ((planet.getDistance() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
+
+				SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+				SDL_RenderDrawCircle(renderer, (SCREEN_WIDTH/2)-earth_x, (SCREEN_HEIGHT/2)-earth_y, orbit_radius);
+				
+				int r = planet.getColor().r;
+				int g = planet.getColor().g;
+				int b = planet.getColor().b;
 
 
-			SDL_SetRenderDrawColor(renderer, r, g, b, 255);
-			SDL_RenderFillCircle(renderer, static_cast<int>(x), static_cast<int>(y), radius);
+				SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+				SDL_RenderFillCircle(renderer, static_cast<int>(x), static_cast<int>(y), radius);
+			}
+			SDL_RenderPresent(renderer);
+			refresh_count = 0;
 		}
-
-		SDL_RenderPresent(renderer);
 
 		solarSystem.simulate(step_speed);
 	}
