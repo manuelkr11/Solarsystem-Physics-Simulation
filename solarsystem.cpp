@@ -1,8 +1,11 @@
 #include "solarsystem.h"
 #include <iostream>
 
-
 double GRAVITATIONAL_CONSTANT = 100;
+
+Planet::Planet(const std::string& name, double mass, double radius, double distance, Color color)
+		: name(name), mass(mass), radius(radius), distance(distance), pos(Vector2D(distance, 0)), 
+		velocity(Vector2D(0, 0)), color(color), rotations(0) {}
 
 std::string Planet::getName() const { 
 	return name; 
@@ -56,7 +59,7 @@ void Planet::resetGravityForces(){
 
 void Planet::addGravityForces(const Planet& other) {
 	double distance = this->getDistance(other);
-	double force_abs = GRAVITATIONAL_CONSTANT * mass * other.getMass() / (distance*distance); //undirected force
+	double force_abs = GRAVITATIONAL_CONSTANT * mass * other.getMass() / (distance*distance);
 	force += ((force_abs * (other.getPos() - pos)) / distance);
 }
 
@@ -68,7 +71,6 @@ void Planet::update(const double inc_step) {
 		rotations++;
 	}
 }
-
 
 std::vector<Planet> SolarSystem::getPlanets() const { 
 	return planets; 

@@ -12,8 +12,8 @@ const int SOLARSYSTEM_WIDTH = 10000;
 void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius) {
     for (int w = 0; w < radius * 2; w++) {
         for (int h = 0; h < radius * 2; h++) {
-            int dx = radius - w; // Horizontaler Abstand vom Mittelpunkt
-            int dy = radius - h; // Vertikaler Abstand vom Mittelpunkt
+            int dx = radius - w;
+            int dy = radius - h;
             if (dx*dx + dy*dy <= radius*radius) {
                 SDL_RenderDrawPoint(renderer, x + dx, y + dy);
             }
@@ -99,13 +99,11 @@ int main( int argc, char *argv[] ) {
 		std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
 		return 1;
 	}
-
 	SDL_Window* window = SDL_CreateWindow("Solar System Physics Simulation", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	if (!window) {
 		std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
 		return 1;
 	}
-
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if (!renderer) {
 		std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
@@ -128,7 +126,7 @@ int main( int argc, char *argv[] ) {
 	bool userPressedEarthKey = false;
 
 	double zoomFactor = 1;
-	double step_speed = 0.000002;
+	double step_speed = 0.0001;
 	bool earth_focus = false;
 
 	int refresh_rate = 500;
@@ -156,7 +154,6 @@ int main( int argc, char *argv[] ) {
 				}
 			}
 		}
-
 		if (userPressedZoomInKey) {
     		zoomFactor += 0.1;
     		userPressedZoomInKey = false;
@@ -166,11 +163,11 @@ int main( int argc, char *argv[] ) {
 			userPressedZoomOutKey = false;
 		}
 		if (userPressedSpeedUpKey) {
-			step_speed *= 1.5;
+			step_speed = std::max(step_speed * 1.3, 0.001);
 			userPressedSpeedUpKey = false;
 		}
 		if (userPressedSpeedDownKey) {
-			step_speed /= 1.5;
+			step_speed = std::min(step_speed /= 1.3, 0.0000001);
 			userPressedSpeedDownKey = false;
 		}
 		if (userPressedEarthKey) {
@@ -191,7 +188,6 @@ int main( int argc, char *argv[] ) {
 			SDL_RenderClear(renderer);
 
 			Vector2D earth_pos;
-
 			if(earth_focus){
 				for (const Planet& planet : solarSystem.getPlanets()) {
 					if(planet.getName() == "earth"){
@@ -203,7 +199,6 @@ int main( int argc, char *argv[] ) {
 			for (const Planet& planet : solarSystem.getPlanets()) {
 
 				Vector2D pos = (((planet.getPos() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH) * zoomFactor) + (Vector2D(SCREEN_WIDTH, SCREEN_HEIGHT) / 2);
-
 				pos -= earth_pos;
 
 				int radius;
@@ -225,7 +220,9 @@ int main( int argc, char *argv[] ) {
 				SDL_SetRenderDrawColor(renderer, planet.getColor().r, planet.getColor().g, planet.getColor().b, 255);
 				SDL_RenderFillCircle(renderer, static_cast<int>(pos.x), static_cast<int>(pos.y), radius);
 			}
+
 			SDL_RenderPresent(renderer);
+
 			refresh_count = 0;
 		}
 
@@ -233,48 +230,43 @@ int main( int argc, char *argv[] ) {
 
 	}
 
-
-	if(true){ //TODO
-
-		float earth_rot = 0.;
-		// Get earth rotations
-		for(const Planet& planet : solarSystem.getPlanets()){
-			if(planet.getName() == "earth"){
-				earth_rot = std::atan2(planet.getPos().y, planet.getPos().x);
-    			earth_rot = earth_rot / (2 * M_PI);
-   				if (earth_rot < 0) {
-        			earth_rot += 1;
-    			}
-				earth_rot += static_cast<float>(planet.getRotations());
-			}
-		}
-
-		std::ofstream outputFile("results.txt");
-		if (!outputFile.is_open()) {
-			std::cerr << "Error opening the file." << std::endl;
-			return 1;
-		}
-
-		for(const Planet& planet : solarSystem.getPlanets()){
-			if(planet.getName() != "sun" && planet.getName() != "moon"){
-				double rotations = std::atan2(planet.getPos().y, planet.getPos().x);
-				
-				rotations = rotations / (2 * M_PI);
-				if (rotations < 0) {
-					rotations += 1;
-				}
-				rotations += static_cast<float>(planet.getRotations());
-				outputFile << planet.getName() << ": " << earth_rot / rotations << std::endl;
-			}
-		}
-
-		outputFile.close();
+	std::ofstream outputFile("results.txt");
+	if (!outputFile.is_open()) {
+		std::cerr << "Error opening the file." << std::endl;
+		return 1;
 	}
+
+	float earth_rot = 0.;
+	for(const Planet& planet : solarSystem.getPlanets()){
+		if(planet.getName() == "earth"){
+			earth_rot = std::atan2(planet.getPos().y, planet.getPos().x);
+    		earth_rot = earth_rot / (2 * M_PI);
+   			if (earth_rot < 0) {
+    			earth_rot += 1;
+    		}
+			earth_rot += static_cast<float>(planet.getRotations());
+		}
+	}
+
+	for(const Planet& planet : solarSystem.getPlanets()){
+		if(planet.getName() != "sun" && planet.getName() != "moon"){
+			double rotations = std::atan2(planet.getPos().y, planet.getPos().x);
+			
+			rotations = rotations / (2 * M_PI);
+			if (rotations < 0) {
+				rotations += 1;
+			}
+			rotations += static_cast<float>(planet.getRotations());
+			outputFile << planet.getName() << ": " << earth_rot / rotations << std::endl;
+		}
+	}
+
+	outputFile.close();
 
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
 	return 0; 
-
+	
 }

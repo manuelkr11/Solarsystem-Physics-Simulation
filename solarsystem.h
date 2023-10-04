@@ -11,8 +11,8 @@ extern double GRAVITATIONAL_CONSTANT;
 
 class Planet {
 public:
-	Planet(const std::string& name, double mass, double radius, double distance, Color color)
-		: name(name), mass(mass), radius(radius), distance(distance), pos(Vector2D(distance, 0)), velocity(Vector2D(0, 0)), color(color), rotations(0) {}
+	Planet(const std::string& name, double mass, double radius, double distance, Color color);
+	
 	std::string getName() const;
 	double getMass() const;
 	double getRadius() const;
@@ -46,6 +46,7 @@ public:
 
 	std::vector<Planet> getPlanets() const;
 	void addPlanet(const Planet&);
+
 	void simulate(const double);
 
 private:
