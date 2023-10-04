@@ -41,10 +41,13 @@ double Planet::getDistance(const Planet& other) const {
     return delta.norm();
 }
 
-void Planet::initializeVelocity(const Planet& other) {
+void Planet::initializeVelocity(const Planet& other, bool moon) {
 	double velocity_abs = sqrt(( GRAVITATIONAL_CONSTANT * other.getMass()) / other.getDistance(*this));
-	double angle = atan2(pos.y, pos.x);
+	double angle = atan2(pos.y-other.getPos().y, pos.x-other.getPos().x);
 	velocity = velocity_abs * Vector2D(sin(angle), cos(angle));
+	if(moon){
+		velocity += other.getVel();
+	}
 }
 
 void Planet::resetGravityForces(){

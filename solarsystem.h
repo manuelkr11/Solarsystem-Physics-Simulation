@@ -22,7 +22,7 @@ public:
 	Color getColor() const;
 	int getRotations() const;
 
-	void initializeVelocity(const Planet&);
+	void initializeVelocity(const Planet& other, bool moon=false);
 	double getDistance(const Planet&) const;
 	void resetGravityForces();
 	void addGravityForces(const Planet&);

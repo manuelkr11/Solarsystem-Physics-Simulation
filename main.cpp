@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include "solarsystem.h"
 #include "vec2d.h"
+#include <cstring>
 
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 800;
@@ -29,7 +30,7 @@ void SDL_RenderDrawCircle(SDL_Renderer* renderer, int x, int y, int radius) {
     }
 }
 
-void initialize_our_ss(SolarSystem &solarSystem) {
+void initialize_our_ss(SolarSystem &solarSystem, bool include_moon) {
     Color color(255, 255, 255);
 
     Planet sun("sun", 333000, 696342, 0, color);
@@ -49,6 +50,13 @@ void initialize_our_ss(SolarSystem &solarSystem) {
     Planet earth("earth", 1, 6371, 151.48, color);
     earth.initializeVelocity(sun);
     solarSystem.addPlanet(earth);
+
+	if(include_moon){
+		color.set(141, 153, 147);
+    	Planet moon("moon", 0.0123, 1740, 151.88, color);
+    	moon.initializeVelocity(earth, include_moon);
+    	solarSystem.addPlanet(moon);
+	}
 
     color.set(222, 102, 69);
     Planet mars("mars", 0.107, 3390, 248.84, color);
@@ -78,6 +86,15 @@ void initialize_our_ss(SolarSystem &solarSystem) {
 
 int main( int argc, char *argv[] ) {
 
+	bool include_moon = false;
+	for (int i = 1; i < argc; i++) {
+        if (std::strcmp(argv[i], "--moon") == 0) {
+            std::cout << "The --moon argument was used." << std::endl;
+            include_moon = true;
+            break;
+        }
+    }
+
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
 		return 1;
@@ -98,7 +115,7 @@ int main( int argc, char *argv[] ) {
 	}
 
 	SolarSystem solarSystem("Earth's Solar System");
-	initialize_our_ss(solarSystem);
+	initialize_our_ss(solarSystem, include_moon);
 	int last_planet = solarSystem.getPlanets().size() - 1;
 
 	bool quit = false;
@@ -109,10 +126,11 @@ int main( int argc, char *argv[] ) {
 	bool userPressedSpeedUpKey = false;
 	bool userPressedSpeedDownKey = false;
 	bool userPressedEarthKey = false;
-	bool calculation = true;
+
 	double zoomFactor = 1;
-	double step_speed = 0.00002;
+	double step_speed = 0.000002;
 	bool earth_focus = false;
+
 	int refresh_rate = 500;
 	int refresh_count = 0;
 
@@ -158,9 +176,11 @@ int main( int argc, char *argv[] ) {
 		if (userPressedEarthKey) {
 			if(earth_focus){
 				earth_focus = false;
+				zoomFactor = 1;
 			}
 			else{
 				earth_focus = true;
+				zoomFactor = 1000;
 			}
 			userPressedEarthKey = false;
 		}
@@ -192,6 +212,9 @@ int main( int argc, char *argv[] ) {
 				}
 				else{
 					radius = std::max(1, static_cast<int>(planet.getRadius() / 7000 * zoomFactor));
+				}
+				if(earth_focus){
+					radius = radius / 50.;
 				}
 
 				int orbit_radius = ((planet.getDistance() * SCREEN_WIDTH * 0.9) / SOLARSYSTEM_WIDTH * zoomFactor);
@@ -233,7 +256,7 @@ int main( int argc, char *argv[] ) {
 		}
 
 		for(const Planet& planet : solarSystem.getPlanets()){
-			if(planet.getName() != "sun"){
+			if(planet.getName() != "sun" && planet.getName() != "moon"){
 				double rotations = std::atan2(planet.getPos().y, planet.getPos().x);
 				
 				rotations = rotations / (2 * M_PI);
