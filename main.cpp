@@ -163,11 +163,11 @@ int main( int argc, char *argv[] ) {
 			userPressedZoomOutKey = false;
 		}
 		if (userPressedSpeedUpKey) {
-			step_speed = std::max(step_speed * 1.3, 0.001);
+			step_speed = std::min(step_speed * 1.3, 0.001);
 			userPressedSpeedUpKey = false;
 		}
 		if (userPressedSpeedDownKey) {
-			step_speed = std::min(step_speed /= 1.3, 0.0000001);
+			step_speed = std::max(step_speed /= 1.3, 0.0000001);
 			userPressedSpeedDownKey = false;
 		}
 		if (userPressedEarthKey) {

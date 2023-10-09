@@ -1,8 +1,8 @@
-mercury: 0.273094
-venus: 0.597856
+mercury: 0.283581
+venus: 0.60733
 earth: 1
-mars: 2.10233
-jupiter: 11.1363
-saturn: 30.7431
-uranus: 86.0489
-neptune: 160.422
+mars: 2.02464
+jupiter: 11.5552
+saturn: 14.8918
+uranus: 89.2256
+neptune: 166.475
