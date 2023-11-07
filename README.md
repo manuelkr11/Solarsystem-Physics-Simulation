@@ -11,7 +11,7 @@ A makefile was added for easier compilation of the main program. To compile all 
 make
 ```
 
-If linkage errors appear during this process you should make sure the provided SDL library is right for your system and C++ compiler (Windows 11 with a 32bit compiler). If not, download the SDL2 library from [here](https://github.com/libsdl-org/SDL/releases/tag/release-2.28.4) and copy both the library `SDL2.dll` itself as well as the folders `src/include` and `src/lib` of the right version into this project. This [tutorial](https://www.youtube.com/watch?v=H08t6gD1Y1E&t=85s) might help in the process.
+If linkage errors appear during this process you should make sure the provided SDL library is right for your system and C++ compiler (Windows 10 with a 32bit compiler). If not, download the SDL2 library from [here](https://github.com/libsdl-org/SDL/releases/tag/release-2.28.4) and copy both the library `SDL2.dll` itself as well as the folders `src/include` and `src/lib` of the right version into this project. This [tutorial](https://www.youtube.com/watch?v=H08t6gD1Y1E&t=85s) might help in the process.
 
 ## Usage
 
