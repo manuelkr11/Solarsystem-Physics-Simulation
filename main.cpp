@@ -136,52 +136,39 @@ int main( int argc, char *argv[] ) {
 		refresh_count++;
 
 		while (SDL_PollEvent(&e)) {
-        	if (e.type == SDL_QUIT) {
+			if (e.type == SDL_QUIT) {
             	quit = true;
         	} else if (e.type == SDL_KEYDOWN) {
-            	if (e.key.keysym.sym == SDLK_m) {
-                	userPressedZoomInKey = true;
-            	} else if (e.key.keysym.sym == SDLK_n) {
-                	userPressedZoomOutKey = true;
-            	} else if (e.key.keysym.sym == SDLK_k) {
-                	userPressedSpeedUpKey = true;
-            	} else if (e.key.keysym.sym == SDLK_j) {
-                	userPressedSpeedDownKey = true;
-            	} else if (e.key.keysym.sym == SDLK_h) {
-                	userPressedEarthKey = true;
-            	} else if (e.key.keysym.sym == SDLK_ESCAPE) {
-					quit = true;
+				switch (e.key.keysym.sym) {
+					case SDLK_m:
+						zoomFactor += 0.1;
+						break;
+					case SDLK_n:
+						zoomFactor -= 0.1;
+						zoomFactor = std::max(0.1, zoomFactor);
+						break;
+					case SDLK_k:
+						step_speed = std::min(step_speed * 1.3, 0.001);
+						break;
+					case SDLK_j:
+						step_speed = std::max(step_speed /= 1.3, 0.0000001);
+						break;
+					case SDLK_h:
+						if(earth_focus){
+							earth_focus = false;
+							zoomFactor = 1;
+						} else {
+							earth_focus = true;
+							zoomFactor = 1000;
+						
+						}
+						break;
+					case SDLK_ESCAPE:
+						quit = true;
+						break;
 				}
 			}
 		}
-		if (userPressedZoomInKey) {
-    		zoomFactor += 0.1;
-    		userPressedZoomInKey = false;
-		}
-		if (userPressedZoomOutKey) {
-			zoomFactor -= 0.1;
-			userPressedZoomOutKey = false;
-		}
-		if (userPressedSpeedUpKey) {
-			step_speed = std::min(step_speed * 1.3, 0.001);
-			userPressedSpeedUpKey = false;
-		}
-		if (userPressedSpeedDownKey) {
-			step_speed = std::max(step_speed /= 1.3, 0.0000001);
-			userPressedSpeedDownKey = false;
-		}
-		if (userPressedEarthKey) {
-			if(earth_focus){
-				earth_focus = false;
-				zoomFactor = 1;
-			}
-			else{
-				earth_focus = true;
-				zoomFactor = 1000;
-			}
-			userPressedEarthKey = false;
-		}
-		zoomFactor = std::max(0.1, zoomFactor);
 
 		if(refresh_count >= refresh_rate){
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -208,6 +195,7 @@ int main( int argc, char *argv[] ) {
 				else{
 					radius = std::max(1, static_cast<int>(planet.getRadius() / 7000 * zoomFactor));
 				}
+
 				if(earth_focus){
 					radius = radius / 50.;
 				}
@@ -268,5 +256,4 @@ int main( int argc, char *argv[] ) {
 	SDL_Quit();
 
 	return 0; 
-	
 }
